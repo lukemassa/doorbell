@@ -3,13 +3,14 @@
 set -e
 set -o pipefail
 
-ARCH=aarch64-unknown-linux-gnu
+GOOS=linux
+GOARCH=arm64
 TARGET=lmassa@doorbell.local
 REMOTE_DIR=/opt/doorbell
 REMOTE_BIN=$REMOTE_DIR/bin
-LOCAL_BINARY=target/$ARCH/release/doorbell
+LOCAL_BINARY=main
 
-cross build --target $ARCH  --release
+GOOS=$GOOS GOARCH=$GOARCH go build main.go
 
 # Upload binary to temp location with scp
 scp "$LOCAL_BINARY" "$TARGET:/tmp/doorbell"
