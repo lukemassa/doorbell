@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"encoding/json"
@@ -17,6 +19,14 @@ const updateFreq = 10 * time.Minute
 
 type BellPress struct {
 	Action string
+}
+
+func getNtfyToken() (string, error) {
+	res, err := os.ReadFile("/tmp/notify_topic")
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(res)), nil
 }
 
 func updateHealthcheck(status bool) {
@@ -39,6 +49,20 @@ func updateHealthcheck(status bool) {
 	}
 
 	fmt.Printf("Posted to %s: %s\n", url, string(body))
+}
+
+func ring(name string) {
+	ntfyToken, err := getNtfyToken()
+	if err != nil {
+		log.Fatal(err)
+	}
+	topic := fmt.Sprintf("%s-%s", name, ntfyToken)
+	url := fmt.Sprintf("https://ntfy.sh/%s", topic)
+	msg := fmt.Sprintf("Ring %s!", name)
+	_, err = http.Post(url, "text/plain", strings.NewReader(msg))
+	if err != nil {
+		log.Printf("Failed to ring %s: %v", name, err)
+	}
 }
 
 func main() {
@@ -67,6 +91,9 @@ func main() {
 			return
 		}
 		fmt.Printf("First floor button was pressed: %s\n", bellPress.Action)
+		if bellPress.Action == "single" {
+			ring("first_floor")
+		}
 	}); token.Wait() && token.Error() != nil {
 		log.Fatalf("Error subscribing to topic: %v", token.Error())
 	}
