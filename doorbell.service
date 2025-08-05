@@ -1,0 +1,15 @@
+[Unit]
+Description=Doorbell healthcheck daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/opt/doorbell/bin/doorbell
+WorkingDirectory=/opt/doorbell
+#EnvironmentFile=/opt/doorbell/config/doorbell.env
+User=root
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
