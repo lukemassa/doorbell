@@ -1,5 +1,4 @@
 - Better logging
-- Copy files and installation instructions back to repo
 - Reflash the raspberry pi, start over
 - Implement test procedure
   - Double press unit 1, get a notification from nfty that test has begun
@@ -9,3 +8,5 @@
 - Put code in cmd/ and internal/
 - Better handling of the nfty token
 - Write readme
+- configuration.yaml file
+    name, zfty prefix, zfty message, IEEE "name", zfty notification like "options" (priority?)

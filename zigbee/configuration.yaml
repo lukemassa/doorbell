@@ -1,0 +1,44 @@
+version: 4
+homeassistant:
+  enabled: false
+frontend:
+  enabled: true
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://localhost
+devices:
+  '0xffffb40e06036a50':
+    friendly_name: first_floor
+  '0xffffb40e0600c4a4':
+    friendly_name: '0xffffb40e0600c4a4'
+serial:
+  port: /dev/zigbee
+  adapter: ezsp
+advanced:
+  network_key:
+    - 73
+    - 217
+    - 142
+    - 92
+    - 59
+    - 94
+    - 88
+    - 92
+    - 184
+    - 72
+    - 66
+    - 134
+    - 173
+    - 6
+    - 235
+    - 248
+  pan_id: 10153
+  ext_pan_id:
+    - 179
+    - 20
+    - 246
+    - 1
+    - 155
+    - 209
+    - 168
+    - 168
