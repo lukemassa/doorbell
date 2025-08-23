@@ -1,0 +1,14 @@
+[Unit]
+Description=Wait until local DNS resolver is reachable
+Documentation=man:systemd.special(7)
+After=network-online.target systemd-resolved.service
+Wants=network-online.target systemd-resolved.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/wait-for-resolver.sh
+RemainAfterExit=yes
+TimeoutSec=15
+
+[Install]
+WantedBy=multi-user.target
