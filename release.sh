@@ -10,7 +10,7 @@ REMOTE_DIR=/opt/doorbell
 REMOTE_BIN=$REMOTE_DIR/bin
 LOCAL_BINARY=main
 
-GOOS=$GOOS GOARCH=$GOARCH go build main.go
+GOOS=$GOOS GOARCH=$GOARCH go build cmd/main.go
 
 # Upload binary to temp location with scp
 scp "$LOCAL_BINARY" "$TARGET:/tmp/doorbell"
@@ -21,4 +21,5 @@ ssh "$TARGET" <<EOF
   sudo mv /tmp/doorbell $REMOTE_BIN/doorbell
   sudo chown root:root $REMOTE_BIN/doorbell
   sudo chmod 755 $REMOTE_BIN/doorbell
+  sudo service doorbell restart
 EOF
