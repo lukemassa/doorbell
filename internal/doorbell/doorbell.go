@@ -25,28 +25,46 @@ type BellPress struct {
 }
 
 type SystemStatus struct {
-	Temp float64 `json:"temp"`
-	Err  string  `json:"err,omitempty"`
+	temp float64
+	err  error
 }
 
-func (s SystemStatus) OK() bool {
-	if s.Err != "" {
-		return false
+type SystemReport struct {
+	Temp    float64 `json:"temp"`
+	Message string  `json:"message"`
+	OK      bool    `json:"ok"`
+}
+
+func (s SystemStatus) Report() SystemReport {
+	ret := SystemReport{
+		Temp: s.temp,
 	}
-	if s.Temp > maxTemp {
-		return false
+	if s.err != nil {
+		ret.Message = fmt.Sprintf("ERROR: %v", s.err)
+		ret.OK = false
+		return ret
 	}
-	return true
+	if s.temp > maxTemp {
+		ret.Message = fmt.Sprintf("Temp above threshold %dC", maxTemp)
+		ret.OK = false
+		return ret
+	}
+	ret.OK = true
+	ret.Message = "All systems normal"
+	return ret
+
 }
 
 func updateHealthcheck(status SystemStatus) {
 	url := baseHealthURL
-	if !status.OK() {
+
+	report := status.Report()
+	if !report.OK {
 		url += "/fail"
 	}
 
 	// Encode to JSON
-	b, err := json.Marshal(status)
+	b, err := json.Marshal(report)
 	if err != nil {
 		panic(err)
 	}
@@ -121,10 +139,10 @@ func (c *Controller) systemHealth() SystemStatus {
 	temp, err := readCPUTemp()
 	if err != nil {
 		return SystemStatus{
-			Err: err.Error(),
+			err: err,
 		}
 	}
-	ret.Temp = temp
+	ret.temp = temp
 	return ret
 }
 
