@@ -7,9 +7,9 @@ Requires=dns-online.service
 
 [Service]
 Type=simple
-ExecStart=/opt/doorbell/bin/doorbell
+ExecStart=/opt/doorbell/bin/doorbell run
 WorkingDirectory=/opt/doorbell
-#EnvironmentFile=/opt/doorbell/config/doorbell.env
+Environment=DOORBELL_CONFIG=/opt/doorbell/config.yaml
 User=root
 Restart=always
 RestartSec=5

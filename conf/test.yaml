@@ -1,0 +1,2 @@
+mqttURL: tcp://localhost:1883
+ntfyTopicSuffixFile: notify-topic-suffix.txt

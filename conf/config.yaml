@@ -1,0 +1,2 @@
+mqttURL: tcp://localhost:1883
+ntfyTopicSuffixFile: /var/tmp/notify_token

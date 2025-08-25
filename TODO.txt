@@ -1,12 +1,9 @@
 - Better logging
-- Reflash the raspberry pi, start over
 - Implement test procedure
   - Double press unit 1, get a notification from nfty that test has begun
   - Enters 5 minute period where all normal notification is bypassed, only notify via nfty and only notify me.
 - Get ringer for first floor
 - Unit tests
-- Put code in cmd/ and internal/
-- Better handling of the nfty token
 - Write readme
 - configuration.yaml file
     name, zfty prefix, zfty message, IEEE "name", zfty notification like "options" (priority?)
