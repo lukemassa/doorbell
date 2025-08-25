@@ -1,2 +1,5 @@
 mqttURL: tcp://localhost:1883
 ntfyTopicSuffixFile: notify-topic-suffix.txt
+units:
+  first_floor:
+    name: "First Floor"

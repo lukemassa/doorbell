@@ -7,9 +7,15 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
+type UnitConfiguration struct {
+	Name    string `yaml:"name"`
+	Address string `yaml:"address"`
+}
+
 type Config struct {
-	MQTTURL             string `yaml:"mqttURL"`
-	NtfyTopicSuffixFile string `yaml:"ntfyTopicSuffixFile"`
+	MQTTURL             string                       `yaml:"mqttURL"`
+	NtfyTopicSuffixFile string                       `yaml:"ntfyTopicSuffixFile"`
+	UnitConfigurations  map[string]UnitConfiguration `yaml:"units"`
 }
 
 func NewConfig(content []byte) (*Config, error) {

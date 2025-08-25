@@ -1,2 +1,6 @@
 mqttURL: tcp://localhost:1883
 ntfyTopicSuffixFile: /var/tmp/notify_token
+units:
+  first_floor:
+    name: "First Floor"
+    address: 0xffffb40e06036a50

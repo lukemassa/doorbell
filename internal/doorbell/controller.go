@@ -15,7 +15,7 @@ const maxTemp = 55 // degrees celsius
 type Controller struct {
 	mqttOpts        *mqtt.ClientOptions
 	ntfyTopicSuffix string
-	units           map[string]UnitConfiguration
+	units           []Unit
 }
 
 func NewController(config *Config) (*Controller, error) {
@@ -27,11 +27,29 @@ func NewController(config *Config) (*Controller, error) {
 	if err != nil {
 		return nil, err
 	}
+	var units []Unit
+	for unitId, unitConfig := range config.UnitConfigurations {
+		units = append(units, Unit{
+			ID:      unitId,
+			Name:    unitConfig.Name,
+			Address: unitConfig.Address,
+		})
+	}
 	return &Controller{
 		mqttOpts:        opts,
 		ntfyTopicSuffix: ntfyToken,
+		units:           units,
 	}, nil
 
+}
+
+func (c Controller) LookupUnit(lookup string) (Unit, bool) {
+	for _, unit := range c.units {
+		if unit.ID == lookup || unit.Address == lookup {
+			return unit, true
+		}
+	}
+	return Unit{}, false
 }
 
 func (c *Controller) Run() error {

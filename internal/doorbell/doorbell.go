@@ -11,10 +11,14 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
-type UnitConfiguration struct{}
+type Unit struct {
+	ID      string
+	Name    string
+	Address string
+}
 
 type BellPress struct {
-	Unit   string
+	UnitID string
 	Action string
 }
 
@@ -28,21 +32,24 @@ func (c *Controller) subscribe() (<-chan BellPress, error) {
 	ret := make(chan BellPress)
 	topic := "zigbee2mqtt/#"
 	token := client.Subscribe(topic, 0, func(_ mqtt.Client, msg mqtt.Message) {
-		unit := strings.TrimPrefix(msg.Topic(), "zigbee2mqtt/")
-		if _, ok := c.units[unit]; !ok {
+		unitID := strings.TrimPrefix(msg.Topic(), "zigbee2mqtt/")
+		_, ok := c.LookupUnit(unitID)
+		if !ok {
+			log.Printf("Zigbee message for unknown topic %s, ignoring", unitID)
 			return
 		}
 		var bellPress BellPress
 
 		err := json.Unmarshal(msg.Payload(), &bellPress)
 		if err != nil {
-			log.Printf("Parsing message: %v", err)
+			log.Printf("Parsing message for %s: %v", unitID, err)
 			return
 		}
 		if bellPress.Action == "" {
+			log.Printf("Message for unit %s did not contain action", unitID)
 			return
 		}
-		bellPress.Unit = unit
+		bellPress.UnitID = unitID
 		ret <- bellPress
 	})
 
@@ -59,12 +66,16 @@ func (c *Controller) subscribe() (<-chan BellPress, error) {
 }
 
 func (c *Controller) Ring(bellPress BellPress) {
-
-	topic := fmt.Sprintf("%s-%s", bellPress.Unit, c.ntfyTopicSuffix)
+	unit, ok := c.LookupUnit(bellPress.UnitID)
+	if !ok {
+		log.Printf("No configuration for %s unit", bellPress.UnitID)
+		return
+	}
+	topic := fmt.Sprintf("%s-%s", bellPress.UnitID, c.ntfyTopicSuffix)
 	url := fmt.Sprintf("https://ntfy.sh/%s", topic)
-	msg := fmt.Sprintf("Ring %s!", bellPress.Unit)
+	msg := fmt.Sprintf("Ring %s!", unit.Name)
 	_, err := http.Post(url, "text/plain", strings.NewReader(msg))
 	if err != nil {
-		log.Printf("Failed to ring %s: %v", bellPress.Unit, err)
+		log.Printf("Failed to ring %s: %v", bellPress.UnitID, err)
 	}
 }

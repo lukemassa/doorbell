@@ -36,7 +36,7 @@ func (l *RingCommand) Execute(args []string) error {
 		log.Fatal(err)
 	}
 	controller.Ring(doorbell.BellPress{
-		Unit:   "first_floor",
+		UnitID: "first_floor",
 		Action: "single",
 	})
 	return nil
