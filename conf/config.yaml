@@ -3,4 +3,4 @@ ntfyTopicSuffixFile: /var/tmp/notify_token
 units:
   first_floor:
     name: "First Floor"
-    address: 0xffffb40e06036a50
+    address: "0xffffb40e06036a50"

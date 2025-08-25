@@ -1,6 +1,7 @@
 package doorbell
 
 import (
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -46,6 +47,7 @@ func NewController(config *Config) (*Controller, error) {
 func (c Controller) LookupUnit(lookup string) (Unit, bool) {
 	for _, unit := range c.units {
 		if unit.ID == lookup || unit.Address == lookup {
+			log.Printf("Found unit %s for lookup %s", unit.Name, lookup)
 			return unit, true
 		}
 	}

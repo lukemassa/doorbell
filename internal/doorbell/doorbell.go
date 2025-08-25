@@ -32,24 +32,24 @@ func (c *Controller) subscribe() (<-chan BellPress, error) {
 	ret := make(chan BellPress)
 	topic := "zigbee2mqtt/#"
 	token := client.Subscribe(topic, 0, func(_ mqtt.Client, msg mqtt.Message) {
-		unitID := strings.TrimPrefix(msg.Topic(), "zigbee2mqtt/")
-		_, ok := c.LookupUnit(unitID)
+		lookup := strings.TrimPrefix(msg.Topic(), "zigbee2mqtt/")
+		unit, ok := c.LookupUnit(lookup)
 		if !ok {
-			log.Printf("Zigbee message for unknown topic %s, ignoring", unitID)
+			log.Printf("Zigbee message for unknown topic %s, ignoring", lookup)
 			return
 		}
 		var bellPress BellPress
 
 		err := json.Unmarshal(msg.Payload(), &bellPress)
 		if err != nil {
-			log.Printf("Parsing message for %s: %v", unitID, err)
+			log.Printf("Parsing message for %s: %v", unit.ID, err)
 			return
 		}
 		if bellPress.Action == "" {
-			log.Printf("Message for unit %s did not contain action", unitID)
+			log.Printf("Message for unit %s did not contain action", unit.ID)
 			return
 		}
-		bellPress.UnitID = unitID
+		bellPress.UnitID = unit.ID
 		ret <- bellPress
 	})
 
@@ -66,6 +66,7 @@ func (c *Controller) subscribe() (<-chan BellPress, error) {
 }
 
 func (c *Controller) Ring(bellPress BellPress) {
+	log.Printf("Attempting to ring to %s", bellPress.UnitID)
 	unit, ok := c.LookupUnit(bellPress.UnitID)
 	if !ok {
 		log.Printf("No configuration for %s unit", bellPress.UnitID)
@@ -77,5 +78,8 @@ func (c *Controller) Ring(bellPress BellPress) {
 	_, err := http.Post(url, "text/plain", strings.NewReader(msg))
 	if err != nil {
 		log.Printf("Failed to ring %s: %v", bellPress.UnitID, err)
+		return
 	}
+
+	log.Printf("Send a ring to %s", bellPress.UnitID)
 }
