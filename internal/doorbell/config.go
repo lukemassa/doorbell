@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"github.com/goccy/go-yaml"
+
+	"filippo.io/age"
 )
 
 type UnitConfiguration struct {
@@ -14,8 +16,10 @@ type UnitConfiguration struct {
 
 type Config struct {
 	MQTTURL             string                       `yaml:"mqttURL"`
-	NtfyTopicSuffixFile string                       `yaml:"ntfyTopicSuffixFile"`
+	AgeKeyFile          string                       `yaml:"ageKeyFile"`
 	UnitConfigurations  map[string]UnitConfiguration `yaml:"units"`
+	EncryptedNtfySuffix string                       `yaml:"encryptedNtfySuffix"`
+	ageIdentities       []age.Identity
 }
 
 func NewConfig(content []byte) (*Config, error) {
@@ -29,13 +33,28 @@ func NewConfig(content []byte) (*Config, error) {
 	return &ret, nil
 }
 
-func (c *Config) Validate() error {
-	if c.NtfyTopicSuffixFile == "" {
-		return errors.New("did not set ntfyTopicSuffixFile")
+func (c *Config) Load() error {
+	if c.AgeKeyFile == "" {
+		return errors.New("did not set ageKeyFile")
 	}
-	_, err := os.Stat(c.NtfyTopicSuffixFile)
+	identities, err := loadIdentities(c.AgeKeyFile)
 	if err != nil {
 		return err
 	}
+	c.ageIdentities = identities
 	return nil
+}
+
+func loadIdentities(path string) ([]age.Identity, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	ids, err := age.ParseIdentities(f)
+	if err != nil {
+		return nil, err
+	}
+	return ids, nil
 }

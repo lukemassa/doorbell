@@ -1,11 +1,14 @@
 package doorbell
 
 import (
+	"bytes"
+	"encoding/base64"
+	"fmt"
+	"io"
 	"log"
-	"os"
-	"strings"
 	"time"
 
+	"filippo.io/age"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
@@ -24,10 +27,11 @@ func NewController(config *Config) (*Controller, error) {
 		AddBroker(config.MQTTURL).
 		SetClientID("zigbee2mqtt-logger")
 
-	ntfyToken, err := getNtfyToken(config.NtfyTopicSuffixFile)
+	ntfyToken, err := getNtfyToken(config.EncryptedNtfySuffix, config.ageIdentities)
 	if err != nil {
 		return nil, err
 	}
+
 	var units []Unit
 	for unitId, unitConfig := range config.UnitConfigurations {
 		units = append(units, Unit{
@@ -75,10 +79,20 @@ func (c *Controller) Run() error {
 	}
 }
 
-func getNtfyToken(ntfyTopicSuffixFile string) (string, error) {
-	res, err := os.ReadFile(ntfyTopicSuffixFile)
+func getNtfyToken(ntfyTopicSuffixFile string, identities []age.Identity) (string, error) {
+
+	decoded, err := base64.StdEncoding.DecodeString(ntfyTopicSuffixFile)
+	if err != nil {
+		return "", fmt.Errorf("failed to decode base64: %v", err)
+	}
+	r, err := age.Decrypt(bytes.NewReader(decoded), identities...)
+	if err != nil {
+		return "", fmt.Errorf("failed to decrypt: %w", err)
+	}
+	ntfyTopicSuffixBytes, err := io.ReadAll(r)
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSpace(string(res)), nil
+
+	return string(ntfyTopicSuffixBytes), nil
 }

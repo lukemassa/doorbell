@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	defaultConfigPath = "conf/test.yaml"
+	defaultConfigPath = "conf/config.yaml"
 )
 
 type ValidateCommand struct {
@@ -87,7 +87,7 @@ func mustGetConfig() *doorbell.Config {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = cfg.Validate()
+	err = cfg.Load()
 	if err != nil {
 		log.Fatal(err)
 	}

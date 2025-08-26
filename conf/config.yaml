@@ -1,5 +1,6 @@
 mqttURL: tcp://localhost:1883
-ntfyTopicSuffixFile: /var/tmp/notify_token
+ageKeyFile: ./age.key # Relative to this config file
+encryptedNtfySuffix: YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBFUmRIa0pWcGEzSWt4Qk9iT2ZGaDVqSW1EUVN1N0xsUFJaTzR3QW9RSVVnCitRckR6eG5WMjE3QkFya1l4aHNMcUFUNElQK1g5SmdCQ0hmaFloMzhLdWMKLS0tIHF0NThZSDhuN01uajlFR2lIN1A5dkNacklXS0lOYUd2bmJKTkNVdTVpSkEKtFxtmGdTiQ+H6wpNG3WkNcgb/Ak+gb7pNkXXa9oZlFM+3taVPa6S/mKY+fUWuqTOUjekwK71zBw7ypYp2gRKVE5rBmc=
 units:
   first_floor:
     name: "First Floor"
