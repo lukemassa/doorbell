@@ -1,9 +1,4 @@
-#!/usr/bin/env bash
-
-logfile=$(find /opt/zigbee2mqtt/data/log -type f -printf '%T@ %p\n' | sort -k1,1nr | head -n 1 | awk '{print $2}')
-tail -f $logfile
-root@doorbell:/opt/doorbell/zigbee# cat pair.sh 
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -euo pipefail
 

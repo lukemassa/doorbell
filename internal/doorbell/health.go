@@ -13,6 +13,8 @@ import (
 	"encoding/json"
 )
 
+const maxTemp = 55 // degrees celsius
+
 type SystemStatus struct {
 	temp float64
 	err  error
@@ -84,7 +86,11 @@ func updateHealthcheck(status SystemStatus) {
 		log.Printf("Failed to post to %s: %v", url, err)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			log.Printf("failed to close: %v", closeErr)
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# Script that waits until the DNS resolver is reachable
+
 set -eu
 
 RESOLVER=$(awk '/^nameserver/ {print $2; exit}' /etc/resolv.conf || true)

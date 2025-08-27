@@ -7,7 +7,6 @@ import (
 
 const baseHealthURL = "https://hc-ping.com/4003a09f-f033-4f38-82ff-a6a0f010fa50"
 const updateFreq = 10 * time.Minute
-const maxTemp = 55 // degrees celsius
 
 type Controller struct {
 	mqttURL string

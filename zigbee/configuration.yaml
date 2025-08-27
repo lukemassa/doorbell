@@ -6,11 +6,7 @@ frontend:
 mqtt:
   base_topic: zigbee2mqtt
   server: mqtt://localhost
-devices:
-  '0xffffb40e06036a50':
-    friendly_name: first_floor
-  '0xffffb40e0600c4a4':
-    friendly_name: '0xffffb40e0600c4a4'
+devices: {}
 serial:
   port: /dev/zigbee
   adapter: ezsp

@@ -1,6 +1,6 @@
 [Unit]
 Description=Doorbell healthcheck daemon
-# Just waiting for network etc is not enough, we don't want to run
+# Just waiting for network, etc is not enough, we don't want to run
 # until we can actually resolve stuff, otherwise the first ping will fail
 After=dns-online.service
 Requires=dns-online.service

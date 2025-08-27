@@ -50,12 +50,18 @@ func (r *RunCommand) Execute(args []string) error {
 	return nil
 }
 
+func mustAddCommand(parser *flags.Parser, name, shortDesc, longDesc string, command interface{}) {
+	if _, err := parser.AddCommand(name, shortDesc, longDesc, command); err != nil {
+		log.Fatalf("failed to add %q command: %v", name, err)
+	}
+}
+
 func main() {
 
 	parser := flags.NewParser(nil, flags.Default)
-	parser.AddCommand("validate", "Validates config", "Makes sure that the config file is valid", &ValidateCommand{})
-	parser.AddCommand("ring", "Rings a unit", "Acts as if the given unit has been rung", &RingCommand{})
-	parser.AddCommand("run", "Runs the controller", "Runs the controller, responding to the doorbell rings", &RunCommand{})
+	mustAddCommand(parser, "validate", "Validates config", "Makes sure that the config file is valid", &ValidateCommand{})
+	mustAddCommand(parser, "ring", "Rings a unit", "Acts as if the given unit has been rung", &RingCommand{})
+	mustAddCommand(parser, "run", "Runs the controller", "Runs the controller, responding to the doorbell rings", &RunCommand{})
 	_, err := parser.Parse()
 	if err != nil {
 		log.Fatal(err)

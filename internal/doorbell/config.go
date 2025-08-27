@@ -103,13 +103,12 @@ func (c *Config) Controller() (*Controller, error) {
 }
 
 func loadIdentities(path string) ([]age.Identity, error) {
-	f, err := os.Open(path)
+	content, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
 
-	ids, err := age.ParseIdentities(f)
+	ids, err := age.ParseIdentities(bytes.NewReader(content))
 	if err != nil {
 		return nil, err
 	}
