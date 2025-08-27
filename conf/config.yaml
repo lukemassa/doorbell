@@ -1,7 +1,14 @@
 mqttURL: tcp://localhost:1883
 ageKeyFile: ./age.key # Relative to this config file
-encryptedNtfySuffix: YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBFUmRIa0pWcGEzSWt4Qk9iT2ZGaDVqSW1EUVN1N0xsUFJaTzR3QW9RSVVnCitRckR6eG5WMjE3QkFya1l4aHNMcUFUNElQK1g5SmdCQ0hmaFloMzhLdWMKLS0tIHF0NThZSDhuN01uajlFR2lIN1A5dkNacklXS0lOYUd2bmJKTkNVdTVpSkEKtFxtmGdTiQ+H6wpNG3WkNcgb/Ak+gb7pNkXXa9oZlFM+3taVPa6S/mKY+fUWuqTOUjekwK71zBw7ypYp2gRKVE5rBmc=
+encryptedNtfySuffix: 
 units:
   first_floor:
     name: "First Floor"
     address: "0xffffb40e06036a50"
+    on_press:
+    - ntfy:
+        # On nfty.sh, anyone can publish to any topic, so we name the topic 'whatever-<random-uuid>' and keep it secret
+        # In this case it's called 'first_floor-<uuid>'
+        encryptedTopic: YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBMQXR0bkpjLy9rd3U0dDFIOEpCWUc5U2Rmc1N1VkQ1R2djaGx0OTRhNlFBCnYzV1JWZGdZc3IzNnV6dFliZkhzTWhXMnpIVmRnMWdrWW1GcFYxemlPUTgKLS0tIHNzZmNyTStzKzZoZ1NMR1RydnhHcC9FMmlrR1BQVXZQZU80dW1NY1NWdGsKHPlmK/ziyLSlcax+RQvbbvH306VbbRq6/THJEEUgqXqLcNc2w23rRnrHJ6hYE6y5Jrio1Mg3fvS8iynSc20wl2ZI6QeMeZP/mjKOTj8GYiw=
+    #- chime:
+    #    address: "0xa4c13860eb829296"

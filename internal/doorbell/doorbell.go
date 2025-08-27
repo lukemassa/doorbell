@@ -3,7 +3,6 @@ package doorbell
 import (
 	"fmt"
 	"log"
-	"net/http"
 	"strings"
 
 	"encoding/json"
@@ -12,9 +11,10 @@ import (
 )
 
 type Unit struct {
-	ID      string
-	Name    string
-	Address string
+	ID        string
+	Name      string
+	Address   string
+	Notifiers []Notifier
 }
 
 type BellPress struct {
@@ -24,7 +24,11 @@ type BellPress struct {
 
 func (c *Controller) subscribe() (<-chan BellPress, error) {
 
-	client := mqtt.NewClient(c.mqttOpts)
+	opts := mqtt.NewClientOptions().
+		AddBroker(c.mqttURL).
+		SetClientID("zigbee2mqtt-logger")
+
+	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		return nil, fmt.Errorf("connecting to MQTT broker: %v", token.Error())
 	}
@@ -66,20 +70,18 @@ func (c *Controller) subscribe() (<-chan BellPress, error) {
 }
 
 func (c *Controller) Ring(bellPress BellPress) {
-	log.Printf("Attempting to ring to %s", bellPress.UnitID)
+	log.Printf("Attempting notifications to %s", bellPress.UnitID)
 	unit, ok := c.LookupUnit(bellPress.UnitID)
 	if !ok {
 		log.Printf("No configuration for %s unit", bellPress.UnitID)
 		return
 	}
-	topic := fmt.Sprintf("%s-%s", bellPress.UnitID, c.ntfyTopicSuffix)
-	url := fmt.Sprintf("https://ntfy.sh/%s", topic)
-	msg := fmt.Sprintf("Ring %s!", unit.Name)
-	_, err := http.Post(url, "text/plain", strings.NewReader(msg))
-	if err != nil {
-		log.Printf("Failed to ring %s: %v", bellPress.UnitID, err)
-		return
+	for i, notifier := range unit.Notifiers {
+		log.Printf("Attempting notifier %d", i+1)
+		err := notifier.Notify()
+		if err != nil {
+			log.Printf("Error notifying %s: %v", unit.Name, err)
+		}
+		log.Printf("Success on notifier %d", i+1)
 	}
-
-	log.Printf("Send a ring to %s", bellPress.UnitID)
 }

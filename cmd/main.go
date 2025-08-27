@@ -22,19 +22,15 @@ type RunCommand struct {
 }
 
 func (f *ValidateCommand) Execute(args []string) error {
-	mustGetConfig()
+	mustGetController()
 	log.Print("Valid config")
 	return nil
 }
 
 func (l *RingCommand) Execute(args []string) error {
 
-	cfg := mustGetConfig()
+	controller := mustGetController()
 
-	controller, err := doorbell.NewController(cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
 	controller.Ring(doorbell.BellPress{
 		UnitID: "first_floor",
 		Action: "single",
@@ -44,13 +40,9 @@ func (l *RingCommand) Execute(args []string) error {
 
 func (r *RunCommand) Execute(args []string) error {
 
-	cfg := mustGetConfig()
+	controller := mustGetController()
 
-	controller, err := doorbell.NewController(cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = controller.Run()
+	err := controller.Run()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -78,7 +70,7 @@ func getConfigContent() ([]byte, error) {
 	return os.ReadFile(configPath)
 }
 
-func mustGetConfig() *doorbell.Config {
+func mustGetController() *doorbell.Controller {
 	content, err := getConfigContent()
 	if err != nil {
 		log.Fatal(err)
@@ -87,9 +79,9 @@ func mustGetConfig() *doorbell.Config {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = cfg.Load()
+	controller, err := cfg.Controller()
 	if err != nil {
 		log.Fatal(err)
 	}
-	return cfg
+	return controller
 }
