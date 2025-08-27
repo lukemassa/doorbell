@@ -25,7 +25,6 @@ This is necessary because wireless doorbells can't reach some of the other units
 - [age](https://github.com/FiloSottile/age) for encrypting sensitive configuration 
 - [zigbee2mqtt](https://www.zigbee2mqtt.io/) for translating the zigbee communication
 - [mosquitto](https://mosquitto.org/) as a broker to get messages from zigbee
-- [golang](https://golang.org/) to write the controller
 
 ## Developing
 
