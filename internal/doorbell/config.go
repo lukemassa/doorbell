@@ -20,10 +20,16 @@ type UnitConfiguration struct {
 }
 
 type NotificationMechanism struct {
-	Ntfy *NtfySettings `yaml:"ntfy"`
+	NtfySettings  *NtfySettings  `yaml:"ntfy"`
+	ChimeSettings *ChimeSettings `yaml:"chime"`
 }
+
 type NtfySettings struct {
 	EncryptedTopic string `yaml:"encryptedTopic"`
+}
+
+type ChimeSettings struct {
+	Address string `yaml:"address"`
 }
 
 type Config struct {
@@ -61,14 +67,21 @@ func (c *Config) Controller() (*Controller, error) {
 		var notifiers []Notifier
 
 		for _, notificationConfig := range unitConfiguration.OnPress {
-			if notificationConfig.Ntfy != nil {
-				topic, err := decrypt(notificationConfig.Ntfy.EncryptedTopic, identities)
+			if notificationConfig.NtfySettings != nil {
+				topic, err := decrypt(notificationConfig.NtfySettings.EncryptedTopic, identities)
 				if err != nil {
 					return nil, err
 				}
 				notifiers = append(notifiers, &NtfyNotifier{
 					topic:   topic,
 					message: fmt.Sprintf("Ring for %s", unitConfiguration.Name),
+				})
+				continue
+			}
+			if notificationConfig.ChimeSettings != nil {
+				notifiers = append(notifiers, &ChimeNotifier{
+					address: notificationConfig.ChimeSettings.Address,
+					mqttURL: c.MQTTURL, // Same queue
 				})
 				continue
 			}
