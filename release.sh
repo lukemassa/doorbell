@@ -47,7 +47,7 @@ fi
 ssh "$TARGET" <<EOF
   sudo mkdir -p $REMOTE_BIN
   sudo mv /tmp/doorbell $REMOTE_BIN/doorbell
-  sudo mv /tmp/doorbell-config.yaml $REMOTE_DIR/config.yaml
+  sudo mv /tmp/doorbell-config.yaml $REMOTE_DIR/conf/config.yaml
   sudo chown root:root $REMOTE_BIN/doorbell
   sudo chmod 755 $REMOTE_BIN/doorbell
   $finalcmd
