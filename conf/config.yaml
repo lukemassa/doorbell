@@ -10,5 +10,5 @@ units:
         # On nfty.sh, anyone can publish to any topic, so we name the topic 'whatever-<random-uuid>' and keep it secret
         # In this case it's called 'first_floor-<uuid>'
         encryptedTopic: YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBMQXR0bkpjLy9rd3U0dDFIOEpCWUc5U2Rmc1N1VkQ1R2djaGx0OTRhNlFBCnYzV1JWZGdZc3IzNnV6dFliZkhzTWhXMnpIVmRnMWdrWW1GcFYxemlPUTgKLS0tIHNzZmNyTStzKzZoZ1NMR1RydnhHcC9FMmlrR1BQVXZQZU80dW1NY1NWdGsKHPlmK/ziyLSlcax+RQvbbvH306VbbRq6/THJEEUgqXqLcNc2w23rRnrHJ6hYE6y5Jrio1Mg3fvS8iynSc20wl2ZI6QeMeZP/mjKOTj8GYiw=
-    - chime:
-        address: "0xa4c13860eb829296"
+    #- chime:
+    #    address: "0xa4c13860eb829296"
