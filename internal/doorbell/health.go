@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/go-retryablehttp"
 
 	"encoding/json"
 )
@@ -81,7 +82,7 @@ func updateHealthcheck(status SystemStatus) {
 	// Wrap in an io.Reader
 	var r io.Reader = bytes.NewReader(b)
 
-	resp, err := http.Post(url, "JSON", r)
+	resp, err := retryablehttp.Post(url, "JSON", r)
 	if err != nil {
 		log.Printf("Failed to post to %s: %v", url, err)
 		return
