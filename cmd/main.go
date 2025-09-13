@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/jessevdk/go-flags"
@@ -31,9 +32,12 @@ func (f *ValidateCommand) Execute(args []string) error {
 func (l *RingCommand) Execute(args []string) error {
 
 	controller := mustGetController()
-
+	if len(args) != 1 {
+		return fmt.Errorf("unexpected number of args: %d", len(args))
+	}
+	unitID := args[0]
 	controller.Ring(doorbell.BellPress{
-		UnitID: "first_floor",
+		UnitID: unitID,
 		Action: "single",
 	})
 	return nil

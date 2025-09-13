@@ -12,5 +12,4 @@
 - Move "decrypt topics" into go
 - Tell systemd we're good
 - Split ring into "on_press" vs "publish"
-- ./bin/doorbell ring should take an option
 - Use a different client for local notifications
