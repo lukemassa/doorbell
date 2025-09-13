@@ -1,10 +1,7 @@
 - Implement test procedure
   - Double press unit 1, get a notification from nfty that test has begun
-  - Enters 5 minute period where all normal notification is bypassed, only notify via nfty and only notify me.
-- Get ringer for first floor
+  - Enters 1 minute period where all normal notification is bypassed, only notify via nfty and only notify me.
 - Unit tests
-- configuration.yaml file
-    name, zfty prefix, zfty message, IEEE "name", zfty notification like "options" (priority?)
 - fan control
     turn on fan if it gets too hot
     have different thresholds during day vs night
