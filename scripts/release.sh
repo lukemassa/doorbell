@@ -32,7 +32,7 @@ LOCAL_CONF_FILE="conf/config.yaml"
 go run cmd/main.go validate
 go test ./...
 
-GOOS=$GOOS GOARCH=$GOARCH go build cmd/main.go
+CGO_ENABLED=0 GOOS=$GOOS GOARCH=$GOARCH go build cmd/main.go
 
 # Upload binary and conf files to temp location with scp
 scp "$LOCAL_BINARY" "$TARGET:/tmp/doorbell"
