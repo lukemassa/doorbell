@@ -39,7 +39,7 @@ func (c ChimeNotifier) Notify() error {
 	// This uses a different client than the one that listens, is that what we want?
 	opts := mqtt.NewClientOptions().
 		AddBroker(c.mqttURL).
-		SetClientID("zigbee2mqtt-logger")
+		SetClientID("zigbee2mqtt-logger") // TODO NEW CLIENT
 
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
