@@ -1,10 +1,11 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	"github.com/jessevdk/go-flags"
+	"github.com/lukemassa/clilog"
+	log "github.com/lukemassa/clilog"
 	"github.com/lukemassa/doorbell/internal/doorbell"
 )
 
@@ -23,7 +24,7 @@ type RunCommand struct {
 
 func (f *ValidateCommand) Execute(args []string) error {
 	mustGetController()
-	log.Print("Valid config")
+	log.Info("Valid config")
 	return nil
 }
 
@@ -56,18 +57,6 @@ func mustAddCommand(parser *flags.Parser, name, shortDesc, longDesc string, comm
 	}
 }
 
-func main() {
-
-	parser := flags.NewParser(nil, flags.Default)
-	mustAddCommand(parser, "validate", "Validates config", "Makes sure that the config file is valid", &ValidateCommand{})
-	mustAddCommand(parser, "ring", "Rings a unit", "Acts as if the given unit has been rung", &RingCommand{})
-	mustAddCommand(parser, "run", "Runs the controller", "Runs the controller, responding to the doorbell rings", &RunCommand{})
-	_, err := parser.Parse()
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func getConfigContent() ([]byte, error) {
 	configPath := os.Getenv("DOORBELL_CONFIG")
 	if configPath == "" {
@@ -90,4 +79,15 @@ func mustGetController() *doorbell.Controller {
 		log.Fatal(err)
 	}
 	return controller
+}
+
+func main() {
+	parser := flags.NewParser(nil, flags.Default)
+	mustAddCommand(parser, "validate", "Validates config", "Makes sure that the config file is valid", &ValidateCommand{})
+	mustAddCommand(parser, "ring", "Rings a unit", "Acts as if the given unit has been rung", &RingCommand{})
+	mustAddCommand(parser, "run", "Runs the controller", "Runs the controller, responding to the doorbell rings", &RunCommand{})
+	_, err := parser.Parse()
+	if err != nil {
+		log.Fatal(err)
+	}
 }

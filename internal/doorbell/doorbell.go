@@ -2,9 +2,10 @@ package doorbell
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
+
+	log "github.com/lukemassa/clilog"
 
 	"encoding/json"
 
@@ -45,9 +46,9 @@ func (c *Controller) subscribe() (DoorbellClient, error) {
 	ret := make(chan BellPress)
 	callback := c.createMQTTCallback(ret)
 	opts.OnConnect = func(c mqtt.Client) {
-		log.Println("Connected to MQTT broker, subscribing...")
+		log.Info("Connected to MQTT broker, subscribing...")
 		if token := c.Subscribe("zigbee2mqtt/#", 1, callback); token.Wait() && token.Error() != nil {
-			log.Printf("Failed to subscribe: %v", token.Error())
+			log.Errorf("Failed to subscribe: %v", token.Error())
 		}
 	}
 
@@ -55,7 +56,7 @@ func (c *Controller) subscribe() (DoorbellClient, error) {
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		return DoorbellClient{}, fmt.Errorf("connecting to MQTT broker: %v", token.Error())
 	}
-	log.Println("Setup Zigbee2MQTT client")
+	log.Info("Setup Zigbee2MQTT client")
 	return DoorbellClient{
 		client:        client,
 		bellPressChan: ret,
@@ -68,18 +69,18 @@ func (c *Controller) createMQTTCallback(bellPressChan chan<- BellPress) func(_ m
 		lookup := strings.TrimPrefix(msg.Topic(), "zigbee2mqtt/")
 		unit, ok := c.LookupUnit(lookup)
 		if !ok {
-			log.Printf("Zigbee message for unknown topic %s, ignoring", lookup)
+			log.Debugf("Zigbee message for unknown topic %s, ignoring", lookup)
 			return
 		}
 		var bellPress BellPress
 
 		err := json.Unmarshal(msg.Payload(), &bellPress)
 		if err != nil {
-			log.Printf("Parsing message for %s: %v", unit.ID, err)
+			log.Errorf("Error message for %s: %v", unit.ID, err)
 			return
 		}
 		if bellPress.Action == "" {
-			log.Printf("Message for unit %s did not contain action", unit.ID)
+			log.Warnf("Message for unit %s did not contain action", unit.ID)
 			return
 		}
 		bellPress.UnitID = unit.ID
@@ -88,18 +89,18 @@ func (c *Controller) createMQTTCallback(bellPressChan chan<- BellPress) func(_ m
 }
 
 func (c *Controller) Ring(bellPress BellPress) {
-	log.Printf("Attempting notifications to %s", bellPress.UnitID)
+	log.Infof("Attempting notifications to %s", bellPress.UnitID)
 	unit, ok := c.LookupUnit(bellPress.UnitID)
 	if !ok {
-		log.Printf("No configuration for %s unit", bellPress.UnitID)
+		log.Warnf("No configuration for %s unit", bellPress.UnitID)
 		return
 	}
 	for i, notifier := range unit.Notifiers {
-		log.Printf("Attempting notifier %d", i+1)
+		log.Infof("Attempting notifier %d", i+1)
 		err := notifier.Notify()
 		if err != nil {
-			log.Printf("Error notifying %s: %v", unit.Name, err)
+			log.Errorf("Error notifying %s: %v", unit.Name, err)
 		}
-		log.Printf("Success on notifier %d", i+1)
+		log.Infof("Success on notifier %d", i+1)
 	}
 }

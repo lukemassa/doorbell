@@ -1,4 +1,3 @@
-- Better logging
 - Implement test procedure
   - Double press unit 1, get a notification from nfty that test has begun
   - Enters 5 minute period where all normal notification is bypassed, only notify via nfty and only notify me.

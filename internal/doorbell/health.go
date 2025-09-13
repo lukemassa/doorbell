@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strconv"
 	"strings"
+
+	log "github.com/lukemassa/clilog"
 
 	"github.com/hashicorp/go-retryablehttp"
 
@@ -75,31 +76,33 @@ func updateHealthcheck(status SystemStatus) {
 	// Encode to JSON
 	b, err := json.Marshal(report)
 	if err != nil {
-		log.Printf("Failed to marshal json to %v", err)
+		log.Errorf("Failed to marshal json to %v", err)
+		return
 	}
-	log.Printf("Writing to status report: %+v", report)
+	log.Infof("Writing to status report: %+v", report)
 
 	// Wrap in an io.Reader
 	var r io.Reader = bytes.NewReader(b)
-
-	resp, err := retryablehttp.Post(url, "JSON", r)
+	retryableClient := retryablehttp.NewClient()
+	retryableClient.Logger = cliLogLogger{}
+	resp, err := retryableClient.Post(url, "JSON", r)
 	if err != nil {
-		log.Printf("Failed to post to %s: %v", url, err)
+		log.Errorf("Failed to post to %s: %v", url, err)
 		return
 	}
 	defer func() {
 		if closeErr := resp.Body.Close(); closeErr != nil {
-			log.Printf("failed to close: %v", closeErr)
+			log.Errorf("failed to close: %v", closeErr)
 		}
 	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("Failed to read body from %s: %v", url, err)
+		log.Errorf("Failed to read body from %s: %v", url, err)
 		return
 	}
 
-	fmt.Printf("Posted to %s: %s\n", url, string(body))
+	log.Infof("Posted to %s: %s\n", url, string(body))
 }
 
 func readCPUTemp() (float64, error) {
@@ -114,4 +117,23 @@ func readCPUTemp() (float64, error) {
 	}
 	// Convert millidegrees Celsius → degrees
 	return float64(milli) / 1000.0, nil
+}
+
+type cliLogLogger struct {
+}
+
+func (c cliLogLogger) fmt(msg string, keysAndValues ...any) string {
+	return fmt.Sprintf("RETRYABLE %s %v", msg, keysAndValues)
+}
+func (c cliLogLogger) Error(msg string, keysAndValues ...any) {
+	log.Error(c.fmt(msg, keysAndValues...))
+}
+func (c cliLogLogger) Info(msg string, keysAndValues ...any) {
+	log.Info(c.fmt(msg, keysAndValues...))
+}
+func (c cliLogLogger) Debug(msg string, keysAndValues ...any) {
+	log.Debug(c.fmt(msg, keysAndValues...))
+}
+func (c cliLogLogger) Warn(msg string, keysAndValues ...any) {
+	log.Warn(c.fmt(msg, keysAndValues...))
 }

@@ -1,11 +1,12 @@
 package doorbell
 
 import (
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	log "github.com/lukemassa/clilog"
 )
 
 const baseHealthURL = "https://hc-ping.com/4003a09f-f033-4f38-82ff-a6a0f010fa50"
@@ -19,7 +20,7 @@ type Controller struct {
 func (c Controller) LookupUnit(lookup string) (Unit, bool) {
 	for _, unit := range c.units {
 		if unit.ID == lookup || unit.Address == lookup {
-			log.Printf("Found unit %s for lookup %s", unit.Name, lookup)
+			log.Infof("Found unit %s for lookup %s", unit.Name, lookup)
 			return unit, true
 		}
 	}
@@ -47,7 +48,7 @@ func (c *Controller) Run() error {
 		case bellPress := <-client.bellPressChan:
 			c.Ring(bellPress)
 		case <-shutDown:
-			log.Println("Shutting down...")
+			log.Info("Shutting down...")
 			client.Shutdown()
 			return nil
 		}
