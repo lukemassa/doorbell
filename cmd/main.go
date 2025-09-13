@@ -82,6 +82,10 @@ func mustGetController() *doorbell.Controller {
 }
 
 func main() {
+	if _, ok := os.LookupEnv("JOURNAL_STREAM"); ok {
+		// logs go straight to journald, so we don't need the time
+		clilog.SetFormat(`{{ .Level }} {{ .Message }}`)
+	}
 	parser := flags.NewParser(nil, flags.Default)
 	mustAddCommand(parser, "validate", "Validates config", "Makes sure that the config file is valid", &ValidateCommand{})
 	mustAddCommand(parser, "ring", "Rings a unit", "Acts as if the given unit has been rung", &RingCommand{})
