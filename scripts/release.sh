@@ -29,6 +29,7 @@ REMOTE_BIN=$REMOTE_DIR/bin
 LOCAL_BINARY=main
 LOCAL_CONF_FILE="conf/config.yaml"
 
+go run cmd/main.go validate
 go test ./...
 
 GOOS=$GOOS GOARCH=$GOARCH go build cmd/main.go
