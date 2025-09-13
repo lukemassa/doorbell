@@ -10,9 +10,7 @@
     have different thresholds during day vs night
 - Validate topic on startup
 - Move "decrypt topics" into go
-- Figure out why it takes a bit after startup to run
-   Have release run some command that waits until ready
-   Was this fixed by PID thign?
-- Shut down client on stop
+- Tell systemd we're good
+- Split ring into "on_press" vs "publish"
 - ./bin/doorbell ring should take an option
 - Use a different client for local notifications
