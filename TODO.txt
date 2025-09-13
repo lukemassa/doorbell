@@ -13,3 +13,5 @@
 - Move "decrypt topics" into go
 - Figure out why it takes a bit after startup to run
    Have release run some command that waits until ready
+   Was this fixed by PID thign?
+- Shut down client on stop
