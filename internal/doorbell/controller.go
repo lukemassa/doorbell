@@ -2,6 +2,9 @@ package doorbell
 
 import (
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -25,10 +28,13 @@ func (c Controller) LookupUnit(lookup string) (Unit, bool) {
 
 func (c *Controller) Run() error {
 
-	ringChan, err := c.subscribe()
+	client, err := c.subscribe()
 	if err != nil {
 		return err
 	}
+
+	shutDown := make(chan os.Signal, 1)
+	signal.Notify(shutDown, syscall.SIGINT, syscall.SIGTERM)
 
 	healthCheckTimer := time.NewTicker(updateFreq)
 	defer healthCheckTimer.Stop()
@@ -38,8 +44,12 @@ func (c *Controller) Run() error {
 		select {
 		case <-healthCheckTimer.C:
 			c.updateSystemHealth()
-		case bellPress := <-ringChan:
+		case bellPress := <-client.bellPressChan:
 			c.Ring(bellPress)
+		case <-shutDown:
+			log.Println("Shutting down...")
+			client.Shutdown()
+			return nil
 		}
 	}
 }

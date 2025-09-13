@@ -25,7 +25,17 @@ type BellPress struct {
 	Action string
 }
 
-func (c *Controller) subscribe() (<-chan BellPress, error) {
+type DoorbellClient struct {
+	client        mqtt.Client
+	bellPressChan chan BellPress
+}
+
+func (m *DoorbellClient) Shutdown() {
+	m.client.Disconnect(250)
+	close(m.bellPressChan)
+}
+
+func (c *Controller) subscribe() (DoorbellClient, error) {
 
 	opts := mqtt.NewClientOptions().
 		AddBroker(c.mqttURL).
@@ -43,10 +53,13 @@ func (c *Controller) subscribe() (<-chan BellPress, error) {
 
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		return nil, fmt.Errorf("connecting to MQTT broker: %v", token.Error())
+		return DoorbellClient{}, fmt.Errorf("connecting to MQTT broker: %v", token.Error())
 	}
 	log.Println("Setup Zigbee2MQTT client")
-	return ret, nil
+	return DoorbellClient{
+		client:        client,
+		bellPressChan: ret,
+	}, nil
 }
 
 // mqttCallback implements the handler for mqtt
