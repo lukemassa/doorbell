@@ -16,3 +16,4 @@
    Was this fixed by PID thign?
 - Shut down client on stop
 - ./bin/doorbell ring should take an option
+- Use a different client for local notifications
