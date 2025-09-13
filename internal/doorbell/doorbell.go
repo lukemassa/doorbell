@@ -3,12 +3,15 @@ package doorbell
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"encoding/json"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
+
+const mqttClientRole = "doorbell-listener"
 
 type Unit struct {
 	ID        string
@@ -26,7 +29,8 @@ func (c *Controller) subscribe() (<-chan BellPress, error) {
 
 	opts := mqtt.NewClientOptions().
 		AddBroker(c.mqttURL).
-		SetClientID("zigbee2mqtt-logger")
+		// add Pid so that when the process restarts, mqtt doesn't get confused about the client identity
+		SetClientID(fmt.Sprintf("%s-%d", mqttClientRole, os.Getpid()))
 
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
