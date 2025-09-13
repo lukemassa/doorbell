@@ -39,7 +39,7 @@ func (c *Controller) subscribe() (<-chan BellPress, error) {
 
 	ret := make(chan BellPress)
 	topic := "zigbee2mqtt/#"
-	token := client.Subscribe(topic, 0, func(_ mqtt.Client, msg mqtt.Message) {
+	token := client.Subscribe(topic, 1, func(_ mqtt.Client, msg mqtt.Message) {
 		lookup := strings.TrimPrefix(msg.Topic(), "zigbee2mqtt/")
 		unit, ok := c.LookupUnit(lookup)
 		if !ok {
