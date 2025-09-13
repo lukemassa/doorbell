@@ -32,14 +32,26 @@ func (c *Controller) subscribe() (<-chan BellPress, error) {
 		// add Pid so that when the process restarts, mqtt doesn't get confused about the client identity
 		SetClientID(fmt.Sprintf("%s-%d", mqttClientRole, os.Getpid()))
 
+	ret := make(chan BellPress)
+	callback := c.createMQTTCallback(ret)
+	opts.OnConnect = func(c mqtt.Client) {
+		log.Println("Connected to MQTT broker, subscribing...")
+		if token := c.Subscribe("zigbee2mqtt/#", 1, callback); token.Wait() && token.Error() != nil {
+			log.Printf("Failed to subscribe: %v", token.Error())
+		}
+	}
+
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
 		return nil, fmt.Errorf("connecting to MQTT broker: %v", token.Error())
 	}
+	log.Println("Setup Zigbee2MQTT client")
+	return ret, nil
+}
 
-	ret := make(chan BellPress)
-	topic := "zigbee2mqtt/#"
-	token := client.Subscribe(topic, 1, func(_ mqtt.Client, msg mqtt.Message) {
+// mqttCallback implements the handler for mqtt
+func (c *Controller) createMQTTCallback(bellPressChan chan<- BellPress) func(_ mqtt.Client, msg mqtt.Message) {
+	return func(_ mqtt.Client, msg mqtt.Message) {
 		lookup := strings.TrimPrefix(msg.Topic(), "zigbee2mqtt/")
 		unit, ok := c.LookupUnit(lookup)
 		if !ok {
@@ -58,19 +70,8 @@ func (c *Controller) subscribe() (<-chan BellPress, error) {
 			return
 		}
 		bellPress.UnitID = unit.ID
-		ret <- bellPress
-	})
-
-	token.Wait()
-
-	err := token.Error()
-
-	if err != nil {
-		return nil, fmt.Errorf("subscribing to topic: %v", token.Error())
+		bellPressChan <- bellPress
 	}
-
-	log.Println("Listening for Zigbee2MQTT messages...")
-	return ret, nil
 }
 
 func (c *Controller) Ring(bellPress BellPress) {
