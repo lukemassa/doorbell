@@ -4,10 +4,12 @@
   - Enters 5 minute period where all normal notification is bypassed, only notify via nfty and only notify me.
 - Get ringer for first floor
 - Unit tests
-- Write readme
 - configuration.yaml file
     name, zfty prefix, zfty message, IEEE "name", zfty notification like "options" (priority?)
 - fan control
     turn on fan if it gets too hot
     have different thresholds during day vs night
 - Validate topic on startup
+- Move "decrypt topics" into go
+- Figure out why it takes a bit after startup to run
+   Have release run some command that waits until ready

@@ -21,6 +21,7 @@ do
             continue
         fi
         run_yq ".units.$unit.on_press[$i].ntfy.encryptedTopic" | base64 -d | age --decrypt -i $ageKeyFile
+        echo
     done
     #echo $unit
 done
