@@ -66,29 +66,15 @@ func (c *Config) Controller() (*Controller, error) {
 		}
 		var notifiers []Notifier
 
-		for _, notificationConfig := range unitConfiguration.OnPress {
-			if notificationConfig.NtfySettings != nil {
-				topic, err := decrypt(notificationConfig.NtfySettings.EncryptedTopic, identities)
-				if err != nil {
-					return nil, err
-				}
-				notifiers = append(notifiers, &NtfyNotifier{
-					topic:   topic,
-					message: fmt.Sprintf("Ring for %s", unitConfiguration.Name),
-				})
-				continue
+		for i, notificationConfig := range unitConfiguration.OnPress {
+			notifier, err := c.getNotifierFromConfig(notificationConfig, unitConfiguration.Name, identities)
+			if err != nil {
+				return nil, fmt.Errorf("configuring %s notifier for %s: %v", indexToOrdinal(i), unitID, err)
 			}
-			if notificationConfig.ChimeSettings != nil {
-				notifiers = append(notifiers, &ChimeNotifier{
-					address: notificationConfig.ChimeSettings.Address,
-					mqttURL: c.MQTTURL, // Same queue
-				})
-				continue
-			}
+			notifiers = append(notifiers, notifier)
+
 		}
-		if len(notifiers) == 0 {
-			return nil, fmt.Errorf("could not configure any notifiers for %s", unitID)
-		}
+
 		units = append(units, Unit{
 			ID:        unitID,
 			Name:      unitConfiguration.Name,
@@ -131,4 +117,42 @@ func decrypt(content string, identities []age.Identity) (string, error) {
 	}
 
 	return string(ntfyTopicSuffixBytes), nil
+}
+
+func (c *Config) getNotifierFromConfig(notificationConfig NotificationMechanism, name string, identities []age.Identity) (Notifier, error) {
+
+	if notificationConfig.NtfySettings != nil {
+		topic, err := decrypt(notificationConfig.NtfySettings.EncryptedTopic, identities)
+		if err != nil {
+			return nil, err
+		}
+		return &NtfyNotifier{
+			topic:   topic,
+			message: fmt.Sprintf("Ring for %s", name),
+		}, nil
+	}
+	if notificationConfig.ChimeSettings != nil {
+		return &ChimeNotifier{
+			address: notificationConfig.ChimeSettings.Address,
+			mqttURL: c.MQTTURL, // Same queue
+		}, nil
+	}
+
+	return nil, errors.New("could not determine which notifier to use")
+
+}
+
+func indexToOrdinal(d int) string {
+	number := d + 1
+	suffix := "th"
+	// TODO: Finish this, deal with like 11th vs 21st
+	switch number {
+	case 1:
+		suffix = "st"
+	case 2:
+		suffix = "nd"
+	case 3:
+		suffix = "rd"
+	}
+	return fmt.Sprintf("%d%s", number, suffix)
 }
