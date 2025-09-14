@@ -22,6 +22,7 @@ type notifierType string
 const (
 	ntfyNotfier   notifierType = "ntfy"
 	chimeNotifier notifierType = "chime"
+	mockNotifier  notifierType = "mock"
 )
 
 type RawUnitConfiguration struct {
@@ -39,12 +40,14 @@ type UnitConfiguration struct {
 type RawNotificationMechanism struct {
 	NtfySettings  *RawNtfySettings `yaml:"ntfy"`
 	ChimeSettings *ChimeSettings   `yaml:"chime"`
+	MockSettings  *MockSettings    `yaml:"mock"`
 }
 
 type NotificationMechanism struct {
 	NotifierType  notifierType
 	NtfySettings  *NtfySettings
 	ChimeSettings *ChimeSettings
+	MockSettings  *MockSettings
 }
 
 type RawNtfySettings struct {
@@ -53,6 +56,10 @@ type RawNtfySettings struct {
 
 type NtfySettings struct {
 	Topic string
+}
+
+type MockSettings struct {
+	Message string `yaml:"message"`
 }
 
 type ChimeSettings struct {
@@ -177,6 +184,14 @@ func (c *RawConfig) getNotificationMechanismFromRaw(notificationConfig RawNotifi
 		return NotificationMechanism{
 			NotifierType:  chimeNotifier,
 			ChimeSettings: notificationConfig.ChimeSettings,
+		}, nil
+	}
+
+	if notificationConfig.MockSettings != nil {
+		log.Infof("Configured mock notifier with message %s", notificationConfig.MockSettings.Message)
+		return NotificationMechanism{
+			NotifierType: mockNotifier,
+			MockSettings: notificationConfig.MockSettings,
 		}, nil
 	}
 

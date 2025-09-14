@@ -17,6 +17,11 @@ type NtfyNotifier struct {
 	message string
 }
 
+type MockNotifier struct {
+	message string
+	channel chan<- string
+}
+
 type ChimeNotifier struct {
 	mqttURL string
 	address string
@@ -56,5 +61,10 @@ func (c ChimeNotifier) Notify() error {
 		return token.Error()
 	}
 
+	return nil
+}
+
+func (m MockNotifier) Notify() error {
+	m.channel <- m.message
 	return nil
 }

@@ -22,3 +22,9 @@ units:
     on_press:
     - ntfy:
         encryptedTopic: YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA1TE5vaUlZYlp6ZnV4TzZnbkZsek1VbEZHbHdpVUZLZFJ6RWV1OXJLVGlFCnRkMUQ3NVdCNzRQTy9RODFGMGRnSUdsNXFtV0hZRDlTL0VLMEJsU2xqVGcKLS0tIFd2UWdpb25mU2FXZEZ6RCs4WmorMWpNRUVzRGRQVUljWTAvYnpWT1NxcWcKrNhig2prI3EfTgv2ao33MCB7Jel03AUT9rau0kxffXSDvRYnce6GlMODx8nbnsijfF58sxLT3oI6f7NIVB43wc+vzJhuxb8jdhgyW8QHnnE=
+  test_floor:
+    name: "Test Floor"
+    address: "NOADDRESS"
+    on_press:
+    - mock:
+        message: "HI!"

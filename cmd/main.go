@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"github.com/jessevdk/go-flags"
 	log "github.com/lukemassa/clilog"
@@ -32,10 +33,15 @@ func (v *ValidateCommand) Execute(args []string) error {
 func (r *RingCommand) Execute(args []string) error {
 
 	controller := mustGetController(false)
+	controller.SetOnMock(func(message string) {
+		log.Infof("Mock received message: %s", message)
+	})
 	controller.Ring(doorbell.BellPress{
 		UnitID: r.UnitID,
 		Action: "single",
 	})
+	// TODO: Better way to wait
+	time.Sleep(1 * time.Second)
 	return nil
 }
 

@@ -10,3 +10,7 @@
 - Use a different client for local notifications
 - Figure out create_mqtt_notifier_clients_on_startup
 - Figure out why unit one chime doesn't work sometimes
+- Prevent multiple notifiers on same onpress
+- Add e2e test
+- Split up into multiple packages
+- Allow notifiers to shut themslves down

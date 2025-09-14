@@ -12,8 +12,9 @@ import (
 const baseHealthURL = "https://hc-ping.com/4003a09f-f033-4f38-82ff-a6a0f010fa50"
 
 type Controller struct {
-	mqttURL string
-	units   []Unit
+	mqttURL     string
+	units       []Unit
+	mockChannel chan string
 }
 
 func (c Controller) LookupUnit(lookup string) (Unit, bool) {
@@ -53,7 +54,7 @@ func (c *Controller) Run() error {
 }
 
 func (c *Config) Controller() (*Controller, error) {
-
+	mockChannel := make(chan string, 10)
 	var units []Unit
 	for unitID, unitConfiguration := range c.UnitConfigurations {
 		var notifiers []Notifier
@@ -71,6 +72,11 @@ func (c *Config) Controller() (*Controller, error) {
 					mqttURL: c.MQTTURL,
 					address: notificationConfig.ChimeSettings.Address,
 				}
+			case mockNotifier:
+				notifier = MockNotifier{
+					message: fmt.Sprintf("Message from %s: %s", unitConfiguration.Name, notificationConfig.MockSettings.Message),
+					channel: mockChannel,
+				}
 			}
 			notifiers = append(notifiers, notifier)
 		}
@@ -83,7 +89,16 @@ func (c *Config) Controller() (*Controller, error) {
 		})
 	}
 	return &Controller{
-		mqttURL: c.MQTTURL,
-		units:   units,
+		mqttURL:     c.MQTTURL,
+		units:       units,
+		mockChannel: mockChannel,
 	}, nil
+}
+
+func (c *Controller) SetOnMock(onMock func(string)) {
+	go func() {
+		for message := range c.mockChannel {
+			onMock(message)
+		}
+	}()
 }
