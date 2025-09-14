@@ -17,6 +17,7 @@ type ValidateCommand struct {
 }
 
 type RingCommand struct {
+	UnitID string `long:"unit-id" short:"u" description:"Unit ID" required:"true"`
 }
 
 type RunCommand struct {
@@ -35,9 +36,8 @@ func (v *ValidateCommand) Execute(args []string) error {
 func (r *RingCommand) Execute(args []string) error {
 
 	controller := mustGetController()
-	unitID := args[0]
 	controller.Ring(doorbell.BellPress{
-		UnitID: unitID,
+		UnitID: r.UnitID,
 		Action: "single",
 	})
 	return nil
