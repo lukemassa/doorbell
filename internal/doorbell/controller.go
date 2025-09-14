@@ -4,13 +4,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	log "github.com/lukemassa/clilog"
 )
 
 const baseHealthURL = "https://hc-ping.com/4003a09f-f033-4f38-82ff-a6a0f010fa50"
-const updateFreq = 10 * time.Minute
 
 type Controller struct {
 	mqttURL string
@@ -34,18 +32,16 @@ func (c *Controller) Run() error {
 		return err
 	}
 
+	systemStatus := newSystemStatus()
+	systemStatus.Run()
+
 	shutDown := make(chan os.Signal, 1)
 	signal.Notify(shutDown, syscall.SIGINT, syscall.SIGTERM)
 
-	healthCheckTimer := time.NewTicker(updateFreq)
-	defer healthCheckTimer.Stop()
-
-	c.updateSystemHealth()
 	for {
 		select {
-		case <-healthCheckTimer.C:
-			c.updateSystemHealth()
 		case bellPress := <-client.bellPressChan:
+			// TODO: If bell press has some info for our system status, let it know!
 			c.Ring(bellPress)
 		case <-shutDown:
 			log.Info("Shutting down...")
