@@ -1,6 +1,7 @@
 package doorbell
 
 import (
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -51,15 +52,38 @@ func (c *Controller) Run() error {
 	}
 }
 
-func (c *Controller) Validate(showSecrets bool) error {
-	for _, unit := range c.units {
-		log.Infof("Validating unit: %s", unit.Name)
-		for _, notifier := range unit.Notifiers {
-			err := notifier.Validate(showSecrets)
-			if err != nil {
-				return err
+func (c *Config) Controller() (*Controller, error) {
+
+	var units []Unit
+	for unitID, unitConfiguration := range c.UnitConfigurations {
+		var notifiers []Notifier
+
+		for _, notificationConfig := range unitConfiguration.OnPress {
+			var notifier Notifier
+			switch notificationConfig.NotifierType {
+			case ntfyNotfier:
+				notifier = NtfyNotifier{
+					topic:   notificationConfig.NtfySettings.Topic,
+					message: fmt.Sprintf("Ring for %s", unitConfiguration.Name),
+				}
+			case chimeNotifier:
+				notifier = ChimeNotifier{
+					mqttURL: c.MQTTURL,
+					address: notificationConfig.ChimeSettings.Address,
+				}
 			}
+			notifiers = append(notifiers, notifier)
 		}
+
+		units = append(units, Unit{
+			ID:        unitID,
+			Name:      unitConfiguration.Name,
+			Address:   unitConfiguration.Address,
+			Notifiers: notifiers,
+		})
 	}
-	return nil
+	return &Controller{
+		mqttURL: c.MQTTURL,
+		units:   units,
+	}, nil
 }

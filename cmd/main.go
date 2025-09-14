@@ -24,18 +24,14 @@ type RunCommand struct {
 }
 
 func (v *ValidateCommand) Execute(args []string) error {
-	controller := mustGetController()
-	err := controller.Validate(v.ShowSecrets)
-	if err != nil {
-		log.Fatalf("Invalid config: %v", err)
-	}
+	mustGetController(v.ShowSecrets)
 	log.Info("Valid config")
 	return nil
 }
 
 func (r *RingCommand) Execute(args []string) error {
 
-	controller := mustGetController()
+	controller := mustGetController(false)
 	controller.Ring(doorbell.BellPress{
 		UnitID: r.UnitID,
 		Action: "single",
@@ -45,7 +41,7 @@ func (r *RingCommand) Execute(args []string) error {
 
 func (r *RunCommand) Execute(args []string) error {
 
-	controller := mustGetController()
+	controller := mustGetController(false)
 
 	err := controller.Run()
 	if err != nil {
@@ -71,12 +67,12 @@ func getConfigContent() ([]byte, error) {
 	return os.ReadFile(configPath)
 }
 
-func mustGetController() *doorbell.Controller {
+func mustGetController(showSecrets bool) *doorbell.Controller {
 	content, err := getConfigContent()
 	if err != nil {
 		log.Fatal(err)
 	}
-	cfg, err := doorbell.NewConfig(content)
+	cfg, err := doorbell.NewConfig(content, showSecrets)
 	if err != nil {
 		log.Fatal(err)
 	}

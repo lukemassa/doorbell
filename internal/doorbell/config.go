@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 
 	"github.com/goccy/go-yaml"
 	log "github.com/lukemassa/clilog"
@@ -14,43 +15,73 @@ import (
 	"filippo.io/age"
 )
 
+var topicRe = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
+
+type notifierType string
+
+const (
+	ntfyNotfier   notifierType = "ntfy"
+	chimeNotifier notifierType = "chime"
+)
+
+type RawUnitConfiguration struct {
+	Name    string                     `yaml:"name"`
+	Address string                     `yaml:"address"`
+	OnPress []RawNotificationMechanism `yaml:"on_press"`
+}
+
 type UnitConfiguration struct {
-	Name    string                  `yaml:"name"`
-	Address string                  `yaml:"address"`
-	OnPress []NotificationMechanism `yaml:"on_press"`
+	Name    string
+	Address string
+	OnPress []NotificationMechanism
+}
+
+type RawNotificationMechanism struct {
+	NtfySettings  *RawNtfySettings `yaml:"ntfy"`
+	ChimeSettings *ChimeSettings   `yaml:"chime"`
 }
 
 type NotificationMechanism struct {
-	NtfySettings  *NtfySettings  `yaml:"ntfy"`
-	ChimeSettings *ChimeSettings `yaml:"chime"`
+	NotifierType  notifierType
+	NtfySettings  *NtfySettings
+	ChimeSettings *ChimeSettings
+}
+
+type RawNtfySettings struct {
+	EncryptedTopic string `yaml:"encryptedTopic"`
 }
 
 type NtfySettings struct {
-	EncryptedTopic string `yaml:"encryptedTopic"`
+	Topic string
 }
 
 type ChimeSettings struct {
 	Address string `yaml:"address"`
 }
 
-type Config struct {
-	MQTTURL            string                       `yaml:"mqttURL"`
-	AgeKeyFile         string                       `yaml:"ageKeyFile"`
-	UnitConfigurations map[string]UnitConfiguration `yaml:"units"`
+type RawConfig struct {
+	MQTTURL            string                          `yaml:"mqttURL"`
+	AgeKeyFile         string                          `yaml:"ageKeyFile"`
+	UnitConfigurations map[string]RawUnitConfiguration `yaml:"units"`
 }
 
-func NewConfig(content []byte) (*Config, error) {
+type Config struct {
+	MQTTURL            string
+	UnitConfigurations map[string]UnitConfiguration
+}
 
-	var ret Config
+func NewConfig(content []byte, showSecrets bool) (*Config, error) {
 
-	err := yaml.Unmarshal(content, &ret)
+	var raw RawConfig
+
+	err := yaml.Unmarshal(content, &raw)
 	if err != nil {
 		return nil, err
 	}
-	return &ret, nil
+	return raw.validate(showSecrets)
 }
 
-func (c *Config) Controller() (*Controller, error) {
+func (c *RawConfig) validate(showSecrets bool) (*Config, error) {
 	if c.AgeKeyFile == "" {
 		return nil, errors.New("did not set ageKeyFile")
 	}
@@ -60,32 +91,30 @@ func (c *Config) Controller() (*Controller, error) {
 		return nil, fmt.Errorf("loading identities: %v", err)
 	}
 
-	var units []Unit
+	unitConfigurations := make(map[string]UnitConfiguration)
 	for unitID, unitConfiguration := range c.UnitConfigurations {
 		if len(unitConfiguration.OnPress) == 0 {
 			log.Warnf("No notification mechanism set for %s", unitID)
 		}
-		var notifiers []Notifier
+		var notificationMechanisms []NotificationMechanism
 
 		for i, notificationConfig := range unitConfiguration.OnPress {
-			notifier, err := c.getNotifierFromConfig(notificationConfig, unitConfiguration.Name, identities)
+			mechanism, err := c.getNotificationMechanismFromRaw(notificationConfig, identities, showSecrets)
 			if err != nil {
 				return nil, fmt.Errorf("configuring %s notifier for %s: %v", indexToOrdinal(i), unitID, err)
 			}
-			notifiers = append(notifiers, notifier)
+			notificationMechanisms = append(notificationMechanisms, mechanism)
 
 		}
-
-		units = append(units, Unit{
-			ID:        unitID,
-			Name:      unitConfiguration.Name,
-			Address:   unitConfiguration.Address,
-			Notifiers: notifiers,
-		})
+		unitConfigurations[unitID] = UnitConfiguration{
+			Name:    unitConfiguration.Name,
+			Address: unitConfiguration.Address,
+			OnPress: notificationMechanisms,
+		}
 	}
-	return &Controller{
-		mqttURL: c.MQTTURL,
-		units:   units,
+	return &Config{
+		MQTTURL:            c.MQTTURL,
+		UnitConfigurations: unitConfigurations,
 	}, nil
 }
 
@@ -120,26 +149,38 @@ func decrypt(content string, identities []age.Identity) (string, error) {
 	return string(ntfyTopicSuffixBytes), nil
 }
 
-func (c *Config) getNotifierFromConfig(notificationConfig NotificationMechanism, name string, identities []age.Identity) (Notifier, error) {
+func (c *RawConfig) getNotificationMechanismFromRaw(notificationConfig RawNotificationMechanism, identities []age.Identity, showSecrets bool) (NotificationMechanism, error) {
 
 	if notificationConfig.NtfySettings != nil {
 		topic, err := decrypt(notificationConfig.NtfySettings.EncryptedTopic, identities)
 		if err != nil {
-			return nil, err
+			return NotificationMechanism{}, err
 		}
-		return &NtfyNotifier{
-			topic:   topic,
-			message: fmt.Sprintf("Ring for %s", name),
+		topicToShow := "<redacted>"
+		if showSecrets {
+			topicToShow = topic
+		}
+		if !topicRe.MatchString(topic) {
+			return NotificationMechanism{}, fmt.Errorf("ntfy token does not match %s: %s", topicRe, topicToShow)
+		}
+
+		log.Infof("Configured ntfy notifier with topic:%s", topicToShow)
+		return NotificationMechanism{
+			NotifierType: ntfyNotfier,
+			NtfySettings: &NtfySettings{
+				Topic: topic,
+			},
 		}, nil
 	}
 	if notificationConfig.ChimeSettings != nil {
-		return &ChimeNotifier{
-			address: notificationConfig.ChimeSettings.Address,
-			mqttURL: c.MQTTURL, // Same queue
+		log.Infof("Configured chime notifier with address %s", notificationConfig.ChimeSettings.Address)
+		return NotificationMechanism{
+			NotifierType:  chimeNotifier,
+			ChimeSettings: notificationConfig.ChimeSettings,
 		}, nil
 	}
 
-	return nil, errors.New("could not determine which notifier to use")
+	return NotificationMechanism{}, errors.New("could not determine which notifier to use")
 
 }
 
