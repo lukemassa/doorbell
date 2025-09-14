@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/lukemassa/clilog"
 
@@ -14,6 +15,8 @@ import (
 
 	"encoding/json"
 )
+
+const updateFreq = 10 * time.Minute
 
 const maxTemp = 55 // degrees celsius
 
@@ -26,6 +29,10 @@ type SystemReport struct {
 	Temp    float64 `json:"temp"`
 	Message string  `json:"message"`
 	OK      bool    `json:"ok"`
+}
+
+func newSystemStatus() *SystemStatus {
+	return &SystemStatus{}
 }
 
 func (s SystemStatus) Report() SystemReport {
@@ -48,27 +55,33 @@ func (s SystemStatus) Report() SystemReport {
 
 }
 
-func (c *Controller) systemHealth() SystemStatus {
-	ret := SystemStatus{}
+func (s *SystemStatus) Run() {
+	go func() {
+		healthCheckTimer := time.NewTicker(updateFreq)
+		s.runHealthcheck()
+
+		for range healthCheckTimer.C {
+			s.runHealthcheck()
+		}
+	}()
+}
+
+func (s *SystemStatus) updateSystemHealth() {
 	temp, err := readCPUTemp()
 	if err != nil {
-		return SystemStatus{
-			err: err,
-		}
+		s.err = err
+		return
 	}
-	ret.temp = temp
-	return ret
+	s.temp = temp
 }
 
-func (c *Controller) updateSystemHealth() {
-	health := c.systemHealth()
-	updateHealthcheck(health)
-}
+func (s *SystemStatus) runHealthcheck() {
 
-func updateHealthcheck(status SystemStatus) {
+	s.updateSystemHealth()
+
 	url := baseHealthURL
 
-	report := status.Report()
+	report := s.Report()
 	if !report.OK {
 		url += "/fail"
 	}
