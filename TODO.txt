@@ -9,3 +9,4 @@
 - Split ring into "on_press" vs "publish"
 - Use a different client for local notifications
 - Figure out create_mqtt_notifier_clients_on_startup
+- Figure out why unit one chime doesn't work sometimes
