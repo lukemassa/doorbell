@@ -26,4 +26,4 @@ uuid=$(uuidgen)
 topic="$prefix-$uuid"
 
 echo "Unencrypted Topic $topic"
-echo "Encrypted Topic   $(echo $topic | tr -d '\n' | age -r $agePub | base64)"
+echo "Encrypted Topic   $(echo $topic | age -r $agePub | base64)"

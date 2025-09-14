@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/jessevdk/go-flags"
-	"github.com/lukemassa/clilog"
 	log "github.com/lukemassa/clilog"
 	"github.com/lukemassa/doorbell/internal/doorbell"
 )
@@ -15,6 +13,7 @@ const (
 )
 
 type ValidateCommand struct {
+	ShowSecrets bool `long:"show-secrets" description:"Show Secrets"`
 }
 
 type RingCommand struct {
@@ -23,18 +22,19 @@ type RingCommand struct {
 type RunCommand struct {
 }
 
-func (f *ValidateCommand) Execute(args []string) error {
-	mustGetController()
+func (v *ValidateCommand) Execute(args []string) error {
+	controller := mustGetController()
+	err := controller.Validate(v.ShowSecrets)
+	if err != nil {
+		log.Fatalf("Invalid config: %v", err)
+	}
 	log.Info("Valid config")
 	return nil
 }
 
-func (l *RingCommand) Execute(args []string) error {
+func (r *RingCommand) Execute(args []string) error {
 
 	controller := mustGetController()
-	if len(args) != 1 {
-		return fmt.Errorf("unexpected number of args: %d", len(args))
-	}
 	unitID := args[0]
 	controller.Ring(doorbell.BellPress{
 		UnitID: unitID,
@@ -55,10 +55,12 @@ func (r *RunCommand) Execute(args []string) error {
 	return nil
 }
 
-func mustAddCommand(parser *flags.Parser, name, shortDesc, longDesc string, command interface{}) {
-	if _, err := parser.AddCommand(name, shortDesc, longDesc, command); err != nil {
+func mustAddCommand(parser *flags.Parser, name, shortDesc, longDesc string, command any) *flags.Command {
+	cmd, err := parser.AddCommand(name, shortDesc, longDesc, command)
+	if err != nil {
 		log.Fatalf("failed to add %q command: %v", name, err)
 	}
+	return cmd
 }
 
 func getConfigContent() ([]byte, error) {
@@ -88,7 +90,7 @@ func mustGetController() *doorbell.Controller {
 func main() {
 	if _, ok := os.LookupEnv("JOURNAL_STREAM"); ok {
 		// logs go straight to journald, so we don't need the time
-		clilog.SetFormat(`{{ .Level }} {{ .Message }}`)
+		log.MustSetFormat(`{{ .Level }} {{ .Message }}`)
 	}
 	parser := flags.NewParser(nil, flags.Default)
 	mustAddCommand(parser, "validate", "Validates config", "Makes sure that the config file is valid", &ValidateCommand{})

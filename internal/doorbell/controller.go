@@ -54,3 +54,16 @@ func (c *Controller) Run() error {
 		}
 	}
 }
+
+func (c *Controller) Validate(showSecrets bool) error {
+	for _, unit := range c.units {
+		log.Infof("Validating unit: %s", unit.Name)
+		for _, notifier := range unit.Notifiers {
+			err := notifier.Validate(showSecrets)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}

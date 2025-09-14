@@ -5,8 +5,6 @@
 - fan control
     turn on fan if it gets too hot
     have different thresholds during day vs night
-- Validate topic on startup
-- Move "decrypt topics" into go
 - Tell systemd we're good
 - Split ring into "on_press" vs "publish"
 - Use a different client for local notifications

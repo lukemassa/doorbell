@@ -3,13 +3,18 @@ package doorbell
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	log "github.com/lukemassa/clilog"
 )
+
+var topicRe = regexp.MustCompile(`^[a-zA-Z0-9\-_]+$`)
 
 type Notifier interface {
 	Notify() error
+	Validate(showSecrets bool) error
 }
 
 type NtfyNotifier struct {
@@ -56,5 +61,25 @@ func (c ChimeNotifier) Notify() error {
 		return token.Error()
 	}
 
+	return nil
+}
+
+func (n NtfyNotifier) Validate(showSecrets bool) error {
+	if showSecrets {
+		log.Infof("SECRET ntfy topic is %s", n.topic)
+	}
+	if !topicRe.MatchString(n.topic) {
+		suffix := "<REDACTED>"
+		if showSecrets {
+			suffix = n.topic
+		}
+		return fmt.Errorf("ntfy token does not match %s: %s", topicRe, suffix)
+	}
+	log.Info("ntfy notifier is valid")
+	return nil
+}
+
+func (c ChimeNotifier) Validate(_ bool) error {
+	log.Info("Chime notifier is valid")
 	return nil
 }
