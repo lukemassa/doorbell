@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/goccy/go-yaml"
+	log "github.com/lukemassa/clilog"
 
 	"filippo.io/age"
 )
@@ -62,7 +63,7 @@ func (c *Config) Controller() (*Controller, error) {
 	var units []Unit
 	for unitID, unitConfiguration := range c.UnitConfigurations {
 		if len(unitConfiguration.OnPress) == 0 {
-			return nil, fmt.Errorf("must set notification mechanism for %s", unitID)
+			log.Warnf("No notification mechanism set for %s", unitID)
 		}
 		var notifiers []Notifier
 
