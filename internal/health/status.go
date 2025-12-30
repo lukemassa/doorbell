@@ -1,12 +1,9 @@
-package doorbell
+package health
 
 import (
 	"bytes"
 	"fmt"
 	"io"
-	"os"
-	"strconv"
-	"strings"
 	"time"
 
 	log "github.com/lukemassa/clilog"
@@ -16,9 +13,9 @@ import (
 	"encoding/json"
 )
 
-const updateFreq = 10 * time.Minute
+const baseHealthURL = "https://hc-ping.com/4003a09f-f033-4f38-82ff-a6a0f010fa50"
 
-const maxTemp = 55 // degrees celsius
+const updateFreq = 10 * time.Minute
 
 type SystemStatus struct {
 	temp float64
@@ -31,7 +28,7 @@ type SystemReport struct {
 	OK      bool    `json:"ok"`
 }
 
-func newSystemStatus() *SystemStatus {
+func NewSystemStatus() *SystemStatus {
 	return &SystemStatus{}
 }
 
@@ -46,6 +43,11 @@ func (s SystemStatus) Report() SystemReport {
 	}
 	if s.temp > maxTemp {
 		ret.Message = fmt.Sprintf("Temp above threshold %dC", maxTemp)
+		ret.OK = false
+		return ret
+	}
+	if s.temp < minTemp {
+		ret.Message = fmt.Sprintf("Temp below threshold %dC", maxTemp)
 		ret.OK = false
 		return ret
 	}
@@ -116,37 +118,4 @@ func (s *SystemStatus) runHealthcheck() {
 	}
 
 	log.Infof("Posted to %s: %s\n", url, string(body))
-}
-
-func readCPUTemp() (float64, error) {
-	data, err := os.ReadFile("/sys/class/thermal/thermal_zone0/temp")
-	if err != nil {
-		return 0, err
-	}
-	s := strings.TrimSpace(string(data))
-	milli, err := strconv.Atoi(s)
-	if err != nil {
-		return 0, err
-	}
-	// Convert millidegrees Celsius → degrees
-	return float64(milli) / 1000.0, nil
-}
-
-type cliLogLogger struct {
-}
-
-func (c cliLogLogger) fmt(msg string, keysAndValues ...any) string {
-	return fmt.Sprintf("RETRYABLE %s %v", msg, keysAndValues)
-}
-func (c cliLogLogger) Error(msg string, keysAndValues ...any) {
-	log.Error(c.fmt(msg, keysAndValues...))
-}
-func (c cliLogLogger) Info(msg string, keysAndValues ...any) {
-	log.Info(c.fmt(msg, keysAndValues...))
-}
-func (c cliLogLogger) Debug(msg string, keysAndValues ...any) {
-	log.Debug(c.fmt(msg, keysAndValues...))
-}
-func (c cliLogLogger) Warn(msg string, keysAndValues ...any) {
-	log.Warn(c.fmt(msg, keysAndValues...))
 }

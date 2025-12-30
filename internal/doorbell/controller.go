@@ -7,9 +7,8 @@ import (
 	"syscall"
 
 	log "github.com/lukemassa/clilog"
+	"github.com/lukemassa/doorbell/internal/health"
 )
-
-const baseHealthURL = "https://hc-ping.com/4003a09f-f033-4f38-82ff-a6a0f010fa50"
 
 type Controller struct {
 	mqttURL     string
@@ -34,7 +33,7 @@ func (c *Controller) Run() error {
 		return err
 	}
 
-	systemStatus := newSystemStatus()
+	systemStatus := health.NewSystemStatus()
 	systemStatus.Run()
 
 	shutDown := make(chan os.Signal, 1)
